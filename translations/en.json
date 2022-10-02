@@ -1,0 +1,8 @@
+{
+  "app": {
+    "name": "Agents Manager",
+    "short_description": "Manager your agents faster",
+    "long_description": "Manager your agents faster than ever before",
+    "installation_instructions": "Simply click install."
+  }
+}

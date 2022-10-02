@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users List</title>
+    <link href="output.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="count" class="count"></div><br />
+    <div class="table" id="table">
+
+        <!-- Loading svg centered to perfection -->
+        <svg class="loading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="#E5007E" stroke-width="2"></circle>
+            <path class="opacity-75" fill="white"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+        </svg>
+    </div>
+    <script src="https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js"></script>
+
+    <script>
+
+        var client = ZAFClient.init();
+
+        // when focus back on the app window
+        client.on("pane.activated", function () {
+            location.reload();
+            console.log('app refreshed', client.context)
+        });
+
+        users = [];
+
+        let np = "/api/v2/users?query=role:agent&include=roles";
+
+        async function getUsers(np) {
+            const data = await client.request(np);
+            return data;
+        }
+
+        async function go() {
+            while (np != null) {
+
+                const data = await getUsers(np)
+                np = data.next_page
+                console.log(data.roles)
+                data.users.forEach(el => {
+
+                    data.roles.filter(role => role.id == el.custom_role_id).forEach(role => {
+                        el.custom = role.name
+                    })
+
+                    users.push(el);
+
+                })
+            }
+        }
+
+        go().then(() => {
+            const count = document.getElementById('count');
+            count.textContent = users.length + " agents licenses currently used";
+            draw();
+        });
+    </script>
+
+    <script>
+
+        var sortedName = true;
+        var sortedEmail = true;
+        var sortedActive = true;
+        var sortedCreate = true;
+        var sortedLogin = true;
+        var sortedRole = true;
+
+        function draw() {
+
+            const table = document.getElementById('table');
+
+            table.innerHTML = `<div class='header row' id='header'>
+                <div class='cell' onclick="sortName()">
+                    Name ↕
+                </div>
+                <div class='cell' onclick="sortEmail()">
+                    Email ↕
+                </div> 
+                <div class='cell' onclick="sortRole()">
+                    Role ↕
+                </div>
+                <div class='cell' onclick="sortActive()">
+                    Active ↕
+                </div>
+                <div class='cell' onclick="sortCreate()">
+                    Created ↕
+                </div>
+                <div class='cell' onclick="sortLogin()">
+                    Last Login ↕
+        </div>`
+            users.forEach((el) => {
+
+                const table = document.getElementById('table');
+
+                table.innerHTML += `<div class='row' onclick="openUser(${el.id})">
+                    <div class="cell">${el.name}</div>
+                    <div class="cell">${el.email}</div>
+                    <div class="cell">${el.custom ? el.custom : '| Built-in role'}</div>
+                    <div class="cell">${el.active ? '✅' : '❌'}</div>
+                    <div class="cell">${new Date(el.created_at).toLocaleDateString()}</div>
+                    <div class="cell">${el.last_login_at ? new Date(el.last_login_at).toLocaleDateString() : 'Never'}</div>
+                    </div>`
+            })
+
+        }
+
+        function openUser(id) {
+            console.log('gonna open ' + id)
+            client.invoke('routeTo', 'user', id)
+        }
+        function sortName() {
+
+            users.sort((a, b) => {
+
+                let fa = a.name.toLowerCase(),
+                    fb = b.name.toLowerCase();
+
+                if (sortedName === true) {
+                    if (fa < fb) {
+                        return -1;
+                    }
+                    if (fa > fb) {
+                        return 1;
+                    }
+                    return 0;
+                } else {
+                    if (fb < fa) {
+                        return -1;
+                    }
+                    if (fb > fa) {
+                        return 1;
+                    }
+                    return 0;
+                }
+            });
+
+            draw()
+            if (!sortedName) {
+                sortedName = true
+            } else {
+                sortedName = false;
+            }
+        }
+
+        function sortEmail() {
+
+            users.sort((a, b) => {
+
+                let fa = a.email.toLowerCase(),
+                    fb = b.email.toLowerCase();
+
+                if (sortedEmail === true) {
+                    if (fa < fb) {
+                        return -1;
+                    }
+                    if (fa > fb) {
+                        return 1;
+                    }
+                    return 0;
+                } else {
+                    if (fb < fa) {
+                        return -1;
+                    }
+                    if (fb > fa) {
+                        return 1;
+                    }
+                    return 0;
+                }
+            });
+
+            draw()
+            if (!sortedEmail) {
+                sortedEmail = true
+            } else {
+                sortedEmail = false;
+            }
+        }
+
+        function sortRole() {
+
+            users.sort((a, b) => {
+
+                let fa = a.custom.toLowerCase(),
+                    fb = b.custom.toLowerCase();
+
+                if (sortedRole === true) {
+                    if (fa < fb) {
+                        return -1;
+                    }
+                    if (fa > fb) {
+                        return 1;
+                    }
+                    return 0;
+                } else {
+                    if (fb < fa) {
+                        return -1;
+                    }
+                    if (fb > fa) {
+                        return 1;
+                    }
+                    return 0;
+                }
+            });
+
+            draw()
+            if (!sortedRole) {
+                sortedRole = true
+            } else {
+                sortedRole = false;
+            }
+        }
+        function sortActive() {
+
+            users.sort((a, b) => {
+
+                let fa = a.active,
+                    fb = b.active;
+
+                if (sortedActive === true) {
+                    if (fa < fb) {
+                        return -1;
+                    }
+                    if (fa > fb) {
+                        return 1;
+                    }
+                    return 0;
+                } else {
+                    if (fb < fa) {
+                        return -1;
+                    }
+                    if (fb > fa) {
+                        return 1;
+                    }
+                    return 0;
+                }
+            });
+
+            draw()
+            if (!sortedActive) {
+                sortedActive = true
+            } else {
+                sortedActive = false;
+            }
+        }
+
+        function sortCreate() {
+
+            users.sort((a, b) => {
+
+                let fa = a.created_at,
+                    fb = b.created_at;
+
+                if (sortedCreate === true) {
+                    if (fa < fb) {
+                        return -1;
+                    }
+                    if (fa > fb) {
+                        return 1;
+                    }
+                    return 0;
+                } else {
+                    if (fb < fa) {
+                        return -1;
+                    }
+                    if (fb > fa) {
+                        return 1;
+                    }
+                    return 0;
+                }
+            });
+
+            draw()
+            if (!sortedCreate) {
+                sortedCreate = true
+            } else {
+                sortedCreate = false;
+            }
+        }
+
+        function sortLogin() {
+
+            users.sort((a, b) => {
+
+                let fa = a.last_login_at,
+                    fb = b.last_login_at;
+
+                if (sortedLogin === true) {
+
+                    if (fa < fb) {
+                        return -1;
+                    }
+                    if (fa > fb) {
+                        return 1;
+                    }
+                    return 0;
+                } else {
+
+                    if (fb < fa) {
+                        return -1;
+                    }
+                    if (fb > fa) {
+                        return 1;
+                    }
+                    return 0;
+                }
+            });
+
+            draw()
+            if (!sortedLogin) {
+                sortedLogin = true
+            } else {
+                sortedLogin = false;
+            }
+        }
+
+    </script>
+    </table><br />
+    <div id="footer" class="footer"> © Copyright 2022 | salim.karim@aware.com.au</div>
+</body>
+
+</html>

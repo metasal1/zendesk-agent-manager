@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.header {
+    font-weight: bold;
+    background: #E5007E;
+    color: white;
+}
+
+.table {
+  display: grid;
+} 
+.row {
+    display: grid;
+    grid-template-columns: 2fr 5fr 1fr 1fr 1fr 1fr;
+  padding: 2px; 
+
+}
+
+.row:has(:hover) {
+    background: #E5007E;
+    color: white;
+    cursor: pointer;
+}
+.count {
+    font-size: small;
+    font-style: italic;
+    position: absolute;
+    right: 0;
+    color: silver;
+    height: 10px;
+    padding-right: 2px;
+}
+.heading {
+    font-size: 2rem;
+    font-weight: bold;
+}
+.loading {
+  @apply animate-spin w-1/2 block m-auto ;
+}
+.footer {
+  @apply text-slate-400 content-center justify-center text-center text-xs p-1;
+}
